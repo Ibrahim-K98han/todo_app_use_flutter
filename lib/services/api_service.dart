@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.106:8000/api'; 
+  static const String baseUrl = 'http://192.168.0.106:8000/api';
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,6 +45,40 @@ class ApiService {
       return jsonDecode(res.body)['message'];
     } catch (e) {
       print('Login error: $e'); // এটা দেখো console এ
+      return 'Connection error: $e';
+    }
+  }
+
+  static Future<String?> register(
+    String name,
+    String email,
+    String password,
+  ) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/register'),
+            headers: await _headers(),
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      print('Register status: ${res.statusCode}');
+      print('Register body: ${res.body}');
+
+      if (res.statusCode == 201) {
+        final data = jsonDecode(res.body);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', data['token']);
+        return null;
+      }
+      return jsonDecode(res.body)['message'];
+    } catch (e) {
+      print('Register error: $e');
       return 'Connection error: $e';
     }
   }
