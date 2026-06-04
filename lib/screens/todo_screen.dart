@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/todo/todo_bloc.dart';
 import '../blocs/todo/todo_event.dart';
 import '../blocs/todo/todo_state.dart';
+import '../services/api_service.dart';
+import 'login_screen.dart';
 
 class TodoScreen extends StatelessWidget {
   const TodoScreen({super.key});
@@ -11,10 +14,25 @@ class TodoScreen extends StatelessWidget {
     final controller = TextEditingController();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Todos')),
+      appBar: AppBar(
+        title: const Text('My Todos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await ApiService.logout();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              }
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          // Input field
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -39,8 +57,6 @@ class TodoScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // Todo list — BlocBuilder এখানে কাজ করে
           Expanded(
             child: BlocBuilder<TodoBloc, TodoState>(
               builder: (context, state) {

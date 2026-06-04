@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_app/repository/todo_repository.dart';
 import 'blocs/todo/todo_bloc.dart';
-import 'blocs/todo/todo_event.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'screens/todo_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,8 +16,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Todo App',
       home: BlocProvider(
-        create: (_) => TodoBloc(TodoRepository())..add(LoadTodos()),
-        child: const TodoScreen(),
+        create: (_) => TodoBloc(TodoRepository()),
+        child: const LoginScreen(),
       ),
     );
   }

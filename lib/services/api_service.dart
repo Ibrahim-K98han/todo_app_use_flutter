@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000/api'; // emulator এ
+  static const String baseUrl = 'http://192.168.0.106:8000/api'; 
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,27 +24,50 @@ class ApiService {
 
   // Auth
   static Future<String?> login(String email, String password) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/login'),
-      headers: await _headers(),
-      body: jsonEncode({'email': email, 'password': password}),
-    );
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', data['token']);
-      return null; // success
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/login'),
+            headers: await _headers(),
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 10)); // timeout add করো
+
+      print('Login status: ${res.statusCode}');
+      print('Login body: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', data['token']);
+        return null;
+      }
+      return jsonDecode(res.body)['message'];
+    } catch (e) {
+      print('Login error: $e'); // এটা দেখো console এ
+      return 'Connection error: $e';
     }
-    return jsonDecode(res.body)['message'];
   }
 
   // Todos
   static Future<List> getTodos() async {
+    final token = await getToken();
+    print('Token: $token');
     final res = await http.get(
       Uri.parse('$baseUrl/todos'),
       headers: await _headers(auth: true),
     );
+    print("Status: ${res.statusCode}, Body: ${res.body}");
     return jsonDecode(res.body);
+  }
+
+  static Future<void> logout() async {
+    await http.post(
+      Uri.parse('$baseUrl/logout'),
+      headers: await _headers(auth: true),
+    );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
   }
 
   static Future<void> addTodo(String title) async {
